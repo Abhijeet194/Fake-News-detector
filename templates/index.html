@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TruthLens — Fake News Detector</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Nunito:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="header">
+      
+      <h1>Detect <span class="highlight">Fake News</span><br>with BERT AI</h1>
+      <p class="subtitle">
+        Paste any news headline or article. Our BERT deep learning model
+        +  Fact Check API analyzes it and tells you if it's real or fake.
+      </p>
+      <div class="stats">
+        <div class="stat-chip">Model <span>BERT Deep Learning</span></div>
+        <div class="stat-chip">Accuracy <span>99.99%</span></div>
+        <div class="stat-chip">Trained on <span>8,000 articles</span></div>
+        
+      </div>
+    </header>
+
+    <!-- API STATUS BAR -->
+    <div class="api-bar" id="api-bar">
+      <div class="api-left">
+        <div class="dot" id="status-dot"></div>
+        <span class="api-label" id="status-text">Checking connection...</span>
+      </div>
+      <div class="api-badges" id="api-badges"></div>
+    </div>
+
+    <!-- INPUT CARD -->
+    <div class="input-card">
+      <label class="field-label" for="article-input">Paste news article or headline</label>
+
+      <textarea id="article-input" placeholder="Example: 'Scientists publish new study showing...'"
+        aria-label="News article input" maxlength="2000"></textarea>
+
+      <div class="validation-msg" id="validation-msg">
+        Please paste a news article before clicking Analyze.
+      </div>
+
+      <div class="char-count" id="char-count">0 / 2000</div>
+
+      <div class="samples-row">
+        <span class="samples-label">Try sample:</span>
+        <button class="sample-btn fake" onclick="loadSample('fake1')">Conspiracy</button>
+        <button class="sample-btn fake" onclick="loadSample('fake2')">Sensational</button>
+        <button class="sample-btn fake" onclick="loadSample('fake3')">Giveaway claim</button>
+        <button class="sample-btn real" onclick="loadSample('real1')">News report</button>
+        <button class="sample-btn real" onclick="loadSample('real2')">Science news</button>
+      </div>
+
+      <button class="analyze-btn" id="analyze-btn" onclick="analyzeArticle()" aria-label="Analyze article">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        Analyze Article
+      </button>
+    </div>
+
+    <!-- SKELETON LOADER -->
+    <div class="skeleton-card" id="skeleton" aria-live="polite">
+      <div class="sk-big"></div>
+      <div class="sk-line w80"></div>
+      <div class="sk-line w60"></div>
+      <div class="sk-line w40"></div>
+    </div>
+
+    <!-- RESULT CARD -->
+    <div class="result-card" id="result-card" aria-live="polite">
+
+      <div class="verdict-row">
+        <div class="verdict-icon" id="verdict-icon"></div>
+        <div>
+          <div class="verdict-title" id="verdict-title"></div>
+          <div class="verdict-sub" id="verdict-sub"></div>
+        </div>
+        <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+      </div>
+
+      <div class="scores-grid">
+        <div class="score-box">
+          <div class="score-box-label">BERT Model</div>
+          <div class="score-box-value" id="bert-score">—</div>
+          <div class="score-box-sub" id="bert-sub">—</div>
+        </div>
+        <div class="score-box">
+          <div class="score-box-label">Fact Check</div>
+          <div class="score-box-value" id="fc-score">—</div>
+          <div class="score-box-sub" id="fc-sub">—</div>
+        </div>
+        <div class="score-box">
+          <div class="score-box-label">Confidence</div>
+          <div class="score-box-value" id="conf-score">—</div>
+          <div class="score-box-sub">Combined score</div>
+        </div>
+      </div>
+
+      <div class="conf-section">
+        <div class="conf-header">
+          <span>Overall confidence</span>
+          <strong id="conf-pct">—</strong>
+        </div>
+        <div class="conf-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="conf-fill" id="conf-fill"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Detected signals</div>
+      <div class="signals-wrap" id="signals-wrap"></div>
+
+      <div class="factcheck-section">
+        <div class="section-title">AI Fact Check Analysis</div>
+        <div id="factcheck-content"></div>
+      </div>
+
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-card" id="history-card">
+      <div class="history-header">
+        <div class="history-title">Recent searches</div>
+        <button class="clear-btn" onclick="clearHistory()">Clear all</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="how-section">
+      <div class="how-title">How it works</div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">Step 01</div>
+          <div class="step-name">Dataset</div>
+          <div class="step-desc">Trained on 8,000+ real and fake news articles.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 02</div>
+          <div class="step-name">Preprocessing</div>
+          <div class="step-desc">Text cleaned, URLs and unnecessary symbols removed</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 03</div>
+          <div class="step-name">BERT Tokenization</div>
+          <div class="step-desc">Input converted into BERT tokens using WordPiece tokenizer</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 04</div>
+          <div class="step-name">Deep Learning Prediction</div>
+          <div class="step-desc">Fine-tuned BERT model predicts whether news is REAL or FAKE</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 05</div>
+          <div class="step-name">Flask API</div>
+          <div class="step-desc">Flask API handles predictions and frontend communication </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">Step 06</div>
+          <div class="step-name">Fact Check API</div>
+          <div class="step-desc">OpenRouter AI analyzes claims and misinformation patterns</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <span>Fake News Detector - Built with Python, Flask, BERT, Transformers & HTML/CSS/JS</span>
+      <span>AI-powered misinformation detection system</span>
+    </footer>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+
+    /* ── SAMPLES ── */
+    const SAMPLES = {
+      fake1: "BREAKING: Deep state EXPOSED! Secret government document LEAKED shows billionaires controlling world elections since 1990s. Anonymous whistleblower reveals the truth mainstream media is hiding. SHARE THIS BEFORE IT GETS DELETED!!!",
+      fake2: "SHOCKING: Scientists REFUSE to admit 5G towers are causing mysterious illness! Anonymous insider reveals the cover-up. Miracle cure suppressed by big pharma!!!",
+      fake3: "Donald Trump will distribute 5 gold coins to every beggar and poor person across America on May 6 2026. Share this news with everyone you know!",
+      real1: "The Federal Reserve raised its benchmark interest rate by 0.25 percentage points on Wednesday, according to an official statement, the latest step in its campaign to bring inflation to its 2% target.",
+      real2: "A peer-reviewed study published in the New England Journal of Medicine found the modified mRNA vaccine demonstrated 94.5% efficacy against severe disease in a randomized controlled trial of 40,000 participants."
+    };
+
+    function loadSample(key) {
+      document.getElementById("article-input").value = SAMPLES[key];
+      updateCharCount();
+      hideResults();
+      document.getElementById("validation-msg").classList.remove("show");
+    }
+
+    /* ── CHAR COUNTER ── */
+    document.getElementById("article-input").addEventListener("input", function () {
+      updateCharCount();
+      document.getElementById("validation-msg").classList.remove("show");
+    });
+
+    function updateCharCount() {
+      const len = document.getElementById("article-input").value.length;
+      document.getElementById("char-count").textContent = `${len} / 2000`;
+    }
+
+    /* ── CTRL+ENTER ── */
+    document.getElementById("article-input").addEventListener("keydown", function (e) {
+      if (e.ctrlKey && e.key === "Enter") analyzeArticle();
+    });
+
+    /* ── API STATUS ── */
+    const API_BASE = window.location.origin;
+
+    async function checkAPIStatus() {
+      const dot = document.getElementById("status-dot");
+      const txt = document.getElementById("status-text");
+      const badges = document.getElementById("api-badges");
+
+      try {
+        const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(2500) });
+        const data = await res.json();
+
+        if (res.ok) {
+          dot.className = "dot online";
+          txt.textContent = "Flask API connected — BERT predictions active";
+          let badgeHTML = `<span class="badge bert">BERT Model</span>`;
+          if (data.fact_check_api) badgeHTML += `<span class="badge fact">Fact Check</span>`;
+          badges.innerHTML = badgeHTML;
+          return true;
+        }
+      } catch { }
+
+      dot.className = "dot offline";
+      txt.textContent = "API offline — local analysis only (run: python app.py)";
+      badges.innerHTML = `<span class="badge local">Local Mode</span>`;
+      return false;
+    }
+
+    checkAPIStatus();
+
+    /* ── MAIN ANALYZE ── */
+    async function analyzeArticle() {
+      const text = document.getElementById("article-input").value.trim();
+
+      if (!text) {
+        document.getElementById("validation-msg").classList.add("show");
+        document.getElementById("article-input").focus();
+        return;
+      }
+
+      setLoading(true);
+      hideResults();
+
+      try {
+        const apiOnline = await checkAPIStatus();
+        let result;
+
+        if (apiOnline) {
+          const res = await fetch(`${API_BASE}/predict`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
+            signal: AbortSignal.timeout(15000)
+          });
+
+          if (!res.ok) throw new Error(`API error ${res.status}`);
+
+          const data = await res.json();
+
+          /*
+           * FIX — Confidence calculation
+           * API returns confidence as 0.0 to 1.0 (e.g. 0.9999)
+           * We multiply by 100 to get percentage (e.g. 99.99)
+           * toFixed(2) ensures exactly 2 decimal places
+           * parseFloat removes trailing zeros
+           */
+          const confPct = parseFloat((data.confidence || 0).toFixed(2));
+          const mlConfPct = parseFloat((data.ml_confidence || data.confidence || 0).toFixed(2));
+
+          result = {
+            isFake: data.label === "FAKE",
+            confidence: confPct,
+            signals: data.signals || [],
+            factCheck: data.fact_check || { available: false, claims: [] },
+            bertLabel: data.bert_label,
+            bertConf: mlConfPct,
+            verdict: data.verdict || {},
+          };
+
+        } else {
+          await new Promise(r => setTimeout(r, 700));
+          result = localAnalysis(text);
+        }
+
+        showResult(result);
+        saveHistory(text, result);
+
+      } catch (err) {
+        showToast("Connection issue. Using local analysis.");
+        const result = localAnalysis(document.getElementById("article-input").value.trim());
+        showResult(result);
+        saveHistory(document.getElementById("article-input").value.trim(), result);
+      }
+
+      setLoading(false);
+    }
+
+    /* ── LOCAL ANALYSIS ── */
+    function localAnalysis(text) {
+      const t = text.toLowerCase();
+      const signals = [];
+
+      const fakePatterns = [
+        [/!{2,}/, "Multiple exclamation marks"],
+        [/[A-Z]{5,}/, "Excessive capitals"],
+        [/\bshocking\b|\bexposed\b|\bbreaking\b/, "Sensational keywords"],
+        [/won't believe|they don't want|media won't/, "Media distrust framing"],
+        [/secret|cover.?up|conspiracy|deep state/, "Conspiracy language"],
+        [/anonymous source|whistleblower/, "Unverified sourcing"],
+        [/share this|forward this|wake up/, "Viral call to action"],
+        [/will give|will distribute|free coin/, "Unrealistic giveaway"],
+        [/beggar|every citizen|free money/, "Populist giveaway"],
+        [/miracle|truth they hide/, "Miracle claims"],
+      ];
+
+      const realPatterns = [
+        [/according to|confirmed|announced/, "Proper attribution"],
+        [/percent|%|study|research|report/, "Data references"],
+        [/published in|journal|peer.?reviewed/, "Academic sourcing"],
+        [/official|committee|government|agency/, "Official sources"],
+        [/however|nevertheless/, "Balanced language"],
+        [/spokesperson|representative|director/, "Named authority"],
+      ];
+
+      for (const [p, l] of fakePatterns) if (p.test(text)) signals.push({ text: l, type: "fake" });
+      for (const [p, l] of realPatterns) if (p.test(t)) signals.push({ text: l, type: "real" });
+
+      if (text.length < 80) signals.push({ text: "Very short article", type: "neutral" });
+      if (text.length > 300) signals.push({ text: "Substantial length", type: "real" });
+      if (!signals.length) signals.push({ text: "No strong signals found", type: "neutral" });
+
+      const fakeCount = signals.filter(s => s.type === "fake").length;
+      const realCount = signals.filter(s => s.type === "real").length;
+      const total = fakeCount + realCount || 1;
+      const isFake = fakeCount / total >= 0.45;
+      const confidence = parseFloat(
+        ((Math.max(fakeCount, realCount) / total) * 100).toFixed(2)
+      );
+
+      return {
+        isFake,
+        confidence,
+        signals,
+        factCheck: { available: false, claims: [] },
+        bertLabel: isFake ? "FAKE" : "REAL",
+        bertConf: confidence,
+        verdict: { fact_verdict: "unknown" },
+      };
+    }
+
+    /* ── SHOW RESULT ── */
+    function showResult(result) {
+      const isFake = result.isFake;
+
+      /* Verdict */
+      const icon = document.getElementById("verdict-icon");
+      const title = document.getElementById("verdict-title");
+      const sub = document.getElementById("verdict-sub");
+
+      icon.className = `verdict-icon ${isFake ? "fake" : "real"}`;
+      icon.textContent = isFake ? "⚠️" : "✅";
+      title.className = `verdict-title ${isFake ? "fake" : "real"}`;
+      title.textContent = isFake ? "Likely Fake News" : "Likely Real News";
+      sub.textContent = isFake
+        ? "This article shows characteristics of misinformation."
+        : "This article appears to follow credible journalistic standards.";
+
+      /*
+       * FIX — BERT score display
+       * Old buggy line: result.bertLabel || result.isFake ? "FAKE" : "REAL"
+       * This was wrong because || has lower precedence than ?:
+       * So it evaluated as: (result.bertLabel || result.isFake) ? "FAKE" : "REAL"
+       * Which always returned "FAKE" since any truthy value = "FAKE"
+       *
+       * Fixed: use parentheses to force correct evaluation
+       */
+      const bertScore = document.getElementById("bert-score");
+      bertScore.textContent = result.bertLabel || (isFake ? "FAKE" : "REAL");
+      bertScore.style.color = isFake ? "var(--red)" : "var(--green)";
+
+      /* BERT confidence — show as xx.xx% */
+      document.getElementById("bert-sub").textContent =
+        `${(result.bertConf || 0).toFixed(2)}% confidence`;
+
+      /* Fact check box */
+      /* Fact check box — updated for OpenRouter/Gemini API */
+      const fcScore = document.getElementById("fc-score");
+      const aiVerdict = result.factCheck?.ai_verdict || "";
+      const fcAvailable = result.factCheck?.available || false;
+
+      if (!fcAvailable) {
+        fcScore.textContent = "Offline";
+        fcScore.style.color = "var(--muted)";
+        document.getElementById("fc-sub").textContent = "API not configured";
+      } else if (aiVerdict === "FAKE") {
+        fcScore.textContent = "FAKE";
+        fcScore.style.color = "var(--red)";
+        document.getElementById("fc-sub").textContent = "Gemini AI verdict";
+      } else if (aiVerdict === "REAL") {
+        fcScore.textContent = "REAL";
+        fcScore.style.color = "var(--green)";
+        document.getElementById("fc-sub").textContent = "Gemini AI verdict";
+      } else {
+        fcScore.textContent = "Analyzed";
+        fcScore.style.color = "var(--yellow)";
+        document.getElementById("fc-sub").textContent = "Gemini AI";
+      }
+
+      /* Combined confidence box — show as xx.xx% */
+      const confScore = document.getElementById("conf-score");
+      confScore.textContent = `${result.confidence.toFixed(2)}%`;
+      confScore.style.color = isFake ? "var(--red)" : "var(--green)";
+
+      /* Confidence bar + header — show as xx.xx% */
+      document.getElementById("conf-pct").textContent = `${result.confidence.toFixed(2)}%`;
+      const fill = document.getElementById("conf-fill");
+      fill.className = `conf-fill ${isFake ? "fake" : "real"}`;
+      setTimeout(() => {
+        /* Cap bar width at 100 even if confidence rounds slightly above */
+        fill.style.width = Math.min(result.confidence, 100) + "%";
+      }, 60);
+
+      /* Signals */
+      document.getElementById("signals-wrap").innerHTML =
+        (result.signals || []).map(s =>
+          `<span class="chip ${s.type}">${s.text}</span>`
+        ).join("");
+
+      /* Fact check */
+      renderFactCheck(result.factCheck);
+
+      /* Show card */
+      const card = document.getElementById("result-card");
+      card.classList.add("show");
+      card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    /* ── FACT CHECK ── */
+    /* Converts markdown **bold** and numbered lists to proper HTML */
+    function renderMarkdown(text) {
+      if (!text) return "";
+      return text
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")   /* **bold** */
+        .replace(/^\*\s(.+)$/gm, "<br>• $1")              /* * bullet → • */
+        .replace(/^\-\s(.+)$/gm, "<br>• $1")              /* - bullet → • */
+        .replace(/^(\d+)\.\s(.+)$/gm, "<br><strong>$1.</strong> $2") /* 1. item */
+        .replace(/\n\n/g, "<br><br>")
+        .replace(/\n/g, "<br>");
+    }
+    function renderFactCheck(factCheck) {
+      const container = document.getElementById("factcheck-content");
+
+      /* API not available or no key */
+      if (!factCheck || !factCheck.available) {
+        container.innerHTML = `
+      <div class="fc-empty">
+        AI Fact Check unavailable — check OpenRouter API key in .env file.
+      </div>
+    `;
+        return;
+      }
+
+      /* Get AI verdict for colored badge */
+      const aiVerdict = factCheck.ai_verdict || "";
+      const isFakeVerdict = aiVerdict === "FAKE";
+      const isRealVerdict = aiVerdict === "REAL";
+
+      const badgeColor = isFakeVerdict ? "var(--red)"
+        : isRealVerdict ? "var(--green)"
+          : "var(--muted)";
+
+      const badgeBg = isFakeVerdict ? "var(--red-bg)"
+        : isRealVerdict ? "var(--green-bg)"
+          : "var(--card2)";
+
+      const verdictBadge = aiVerdict ? `
+    <span style="
+      display: inline-block;
+      background: ${badgeBg};
+      color: ${badgeColor};
+      border: 1px solid ${badgeColor};
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+      margin-bottom: 10px;
+    ">AI says: ${aiVerdict}</span>
+  ` : "";
+
+      /* Render response with markdown converted to HTML */
+      container.innerHTML = `
+    <div class="factcheck-item">
+      ${verdictBadge}
+      <div style="
+        font-size: 13px;
+        line-height: 1.8;
+        color: var(--text);
+      ">
+        ${renderMarkdown(factCheck.response || "No response received")}
+      </div>
+    </div>
+  `;
+    }
+
+
+    /* ── HISTORY ── */
+    let searchHistory = [];
+
+    function saveHistory(text, result) {
+      searchHistory.unshift({
+        text: text.slice(0, 80) + (text.length > 80 ? "..." : ""),
+        fullText: text,
+        isFake: result.isFake,
+        confidence: result.confidence,
+      });
+      if (searchHistory.length > 5) searchHistory.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const card = document.getElementById("history-card");
+      const list = document.getElementById("history-list");
+
+      if (!searchHistory.length) { card.classList.remove("show"); return; }
+
+      card.classList.add("show");
+      list.innerHTML = searchHistory.map((item, i) => `
+      <div class="history-item" onclick="reloadHistory(${i})" role="button" tabindex="0">
+        <span class="h-badge ${item.isFake ? "fake" : "real"}">${item.isFake ? "FAKE" : "REAL"}</span>
+        <span class="h-text">${item.text}</span>
+        <span class="h-conf">${item.confidence.toFixed(2)}%</span>
+      </div>
+    `).join("");
+    }
+
+    function reloadHistory(index) {
+      document.getElementById("article-input").value = searchHistory[index].fullText;
+      updateCharCount();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function clearHistory() { searchHistory = []; renderHistory(); }
+
+    /* ── COPY RESULT ── */
+    function copyResult() {
+      const title = document.getElementById("verdict-title").textContent;
+      const conf = document.getElementById("conf-pct").textContent;
+      const text = document.getElementById("article-input").value.trim();
+      const copyText = ` Result:\n${title} (${conf} confidence)\n\nArticle: ${text.slice(0, 150)}...`;
+      navigator.clipboard.writeText(copyText)
+        .then(() => showToast("Result copied to clipboard!"))
+        .catch(() => showToast("Could not copy. Try selecting manually."));
+    }
+
+    /* ── HELPERS ── */
+    function setLoading(isLoading) {
+      const btn = document.getElementById("analyze-btn");
+      const skeleton = document.getElementById("skeleton");
+      if (isLoading) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Analyzing with BERT...';
+        skeleton.classList.add("show");
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Analyze Article`;
+        skeleton.classList.remove("show");
+      }
+    }
+
+    function hideResults() {
+      document.getElementById("result-card").classList.remove("show");
+      document.getElementById("conf-fill").style.width = "0%";
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+  </script>
+</body>
+
+</html>

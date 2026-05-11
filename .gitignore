@@ -1,0 +1,8 @@
+env/
+.env
+
+Fake.csv
+True.csv
+
+bert_fake_news_model/
+upload_model.py
