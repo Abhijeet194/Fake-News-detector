@@ -38,7 +38,7 @@ CORS(app)
 # CONFIG
 
 
-MODEL_PATH = "YOUR_HF_USERNAME/truthlens-bert"
+MODEL_PATH = "Abhijeet9955/truthlens-bert"
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -297,7 +297,7 @@ def predict():
 
 
             pred_class = 0
-            confidence = 50.0
+            confidence = 0.0
 
         
         # OPENROUTER FACT CHECK
