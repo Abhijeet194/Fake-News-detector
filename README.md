@@ -9,6 +9,8 @@ pinned: false
 
 # TruthLens — Fake News Detector
 
+# live url - https://abhijeet9955-truthlens-fake-news.hf.space
+
 AI powered fake news detection using BERT deep learning model + Gemini AI analysis.
 
 ## Features
