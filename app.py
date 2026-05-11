@@ -54,20 +54,30 @@ print(current_date)
 MODEL_LOADED = False
 
 try:
+    print("LOADING MODEL FROM:", MODEL_PATH)
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
 
     model.eval()
 
-    MODEL_LOADED = True
+    # TEST
+    test = tokenizer("This is a fake news test", return_tensors="pt")
 
-    print("BERT model loaded successfully")
+
+    with torch.no_grad():
+
+        out = model(**test)
+
+    print("LOGITS:", out.logits)
+
+    MODEL_LOADED = True
+    print(" BERT model loaded successfully")
 
 except Exception as e:
-
-    print(f"Could not load BERT model: {e}")
+    
+    MODEL_LOADED = False
+    print(" MODEL LOAD FAILED:", str(e))
 
 
 # SIGNAL DETECTOR
