@@ -6,7 +6,7 @@ colorTo: red
 sdk: docker
 pinned: false
 ---
-TruthLens — Fake News Detector
+# TruthLens — Fake News Detector
 
 AI-powered fake news detection system using a fine-tuned BERT model and AI-based analysis.
 
