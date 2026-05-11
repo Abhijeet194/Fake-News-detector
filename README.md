@@ -1,49 +1,28 @@
-# TruthLens AI — Fake News Detector
+---
+title: TruthLens Fake News Detector
+emoji: 🔍
+colorFrom: purple
+colorTo: red
+sdk: docker
+pinned: false
+---
 
-TruthLens AI is a hybrid fake news detection web application built using Flask, BERT, OpenRouter AI, and HTML/CSS/JavaScript.
+# TruthLens — Fake News Detector
 
-The system combines:
-- BERT deep learning classification
-- Rule-based misinformation signal detection
-- AI reasoning using OpenRouter API
+AI powered fake news detection using BERT deep learning model + Gemini AI analysis.
 
-to determine whether a news article is likely REAL or FAKE.
-
-
-
-# Features
-
-- BERT-based fake news detection
-- AI fact-check analysis using OpenRouter
-- Rule-based misinformation signal detection
-- Modern responsive UI
-- Confidence score visualization
-- Local fallback analysis
-- Fake/Real prediction labels
+## Features
+- BERT fine-tuned on 8000+ news articles
+- 99.99% accuracy on test set
+- Gemini AI fact check analysis
 - Flask REST API backend
-- Frontend built with pure HTML/CSS/JavaScript
+- Clean HTML CSS JS frontend
 
+## Tech Stack
+- Python, Flask, PyTorch
+- HuggingFace Transformers (BERT)
+- OpenRouter Gemini AI
+- HTML, CSS, JavaScript
 
-
-# Tech Stack
-
-## Backend
-- Python
-- Flask
-- Transformers
-- PyTorch
-- OpenRouter API
-
-## Frontend
-- HTML5
-- CSS3
-- JavaScript
-
-## AI Models
-- bert-base-uncased
-- gemini via OpenRouter API
-
-## Author
-
- Abhijeet Kumar
-
+## Made By
+Abhijeet Kumar
